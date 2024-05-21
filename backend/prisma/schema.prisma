@@ -35,7 +35,7 @@ model Worker {
 model Task {
   id            Int         @id @default(autoincrement())
   title         String      @default("Select the Most Attractive Title")
-  options       Option[]    
+  options       Option[]        
   user_id       Int
   signature     String 
   amount        String 
@@ -46,7 +46,6 @@ model Task {
 model Option {
   id            Int         @id @default(autoincrement())
   image_url     String 
-  Option_id     Int 
   task_id       Int
   task          Task      @relation(fields: [task_id], references: [id])          // foregin key for option and Task table (many to one)
   submissions   Submission[]
