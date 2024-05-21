@@ -1,0 +1,89 @@
+Work to be done in : Web2                                            Work to be Done in : Web3
+1. S3 / Object Stores                                                1. Wallet Adapters
+2. Pre-signed-Url                                                    2. Sigining Messages
+3. CDN                                                               3. Transactions and siging txns
+4. Http Servers                                                      4. Indexing Blockchains
+5. DataBase (using postgres)                                         5. Rpc (Remote Proceger Call) : servers that let you talk to blockchain
+6. Asyn Architecture / Workers                                       6. Workers talking to the Blockchains
+
+Major Works to be done
+1. Letting users upload a photo 
+2. Letting users pay and verify payments to the backend
+3. Allowing workers to payout $ to their own wallets
+
+
+Solving aboves : Letting users upload a photo
+1. uplaoding a photo , directly to the backend in from of (a.jpg) :
+ ( not a good approach : security issues and Resisted to have multiple backend server: no distributed system for db)
+2. uploading a photo , Using a Object Store( eg S3 , digitalocean have its own) , it a place where we dump our objects . 
+3. uplaoding a photo , By first uplaoding it to our backend server (as it is having our aws (s3) password also so) ,
+ we can then can dump these objects(photos) to our s3 : but it then become backend heavy 
+4. uploading a photo : best way is : 
+   user can send a request to server for a : Pre-Signed-Url (one object at a time) , then backend (using aws (s3) password ) send this to s3 for 
+   pre-signed-url , and send back to backend to user , and then user can directly send/dump object s3 bucket : removes heavy 
+   load on backend servers
+
+
+Solving aboves : Letting users pay and verify payments to the backend
+goal : to create a verified task from the backend 
+1. Problem : it is easy to make a direct payment form one wallet (say sol) to another (say Eth) , and just simply 
+    not knowing backend who has done the payment and of what amount . 
+2. Every payment genertes a Singatures , which can be verified along with objects for which payment is been made using 
+    backend (navive approach)
+3. Thus : verification is depends on User (i.e for Singature) , but if user (frontend) refresh the page , then sign might lost 
+4. Bigger Problem : anyone can send this Singature to the backend and make the payment it's own ( done by them) and backend then 
+    creates a task for that unauthorised user
+5. One Way : mainain a Db (Linking Wallet to their accounts (not liked by wallet user)) : storing 
+ (Userid and Signtaure/walletId) : and then payment can be check using id by backend to start creating tasks 
+6. Good way : Indexing Blockchains  (using by galbming websites etc)
+
+
+Solving aboves : Allowing workers to payout $ to their own wallets
+1. When a Worker request for a creatain amount (above threshold ) , then payment should be done from parent wallet to 
+    their own crypto wallets
+2. Problem : As backend is just simply a terminal (or ec2 machine) how will it intiate a payment of $ , unlike frontend where 
+    there a pop-up intiated for payments by user to wallets 
+3. Problem (imp): as blockchain is unrealiabe , thus must have to verfiy payments again and again , Workers backend need to check 
+    for the payment (from db) after evey (say 5 sec) wethter payment is done or not 
+4. Must be having a worker for this to check again and again (Transactions)
+5. Private key is also stored in server (ec2 say) : making it highly risky . 
+
+
+
+Steps to Follow : 
+For WEb2: 
+
+1. Creating a express Backend server
+1.1. Creating Aws Credintals (Amazons3 -> Buckets -> Create Bucket)
+1.2. S3 for this project : not publicly acess to everyone : Expose CDN (control Delivery Network) Like : CloudFront 
+1.3. paste the CloudFront Policy (in json from) in s3 Edit Bucket Policy section
+1.4. Creating a Presigned user using IAM -> User -> Select Premission Policies (don't select all : not recommended) : Generate 
+    Acess Keys (security) : These keys should be stored in backend not frontend : to avoid any loss of data by any randome user
+
+2. Creating 2 Frontends (using next : users_frontend and workers_frontend)
+
+3. Creating Schemas (database) : using postgres + Prisma (ORM)
+3.1 Using Neon for Postgres
+3.2 adding Primsa in backend (see doc for prisma setup )
+3.3 Setting up schemas in schema.prisma file : (like model User , model worker) : define address instead of emails 
+3.4 Setting up relations also for model task and options (using like :   author    User     @relation(fields: [authorId], references: [id]))
+3.5 Look for Relations b/w tables 
+3.6 This can lead to heavy quering in b/w the tables : can use Caching : can write a SubmissionCache (model Logic) to 
+    remove some querying 
+3.7 Migrating schemas (that is : to tell postgres to make tables) : using npx primsa migrate dev
+
+
+4. Talking to database (by creating Routes): 
+4.1 : Route1 : Post('/signin'); Auth using : Wallet and Jwt Tokens : jwt (simply a long string) : stores it upon approval from the db 
+               Decentralised Apps : by using : address and signed_message , upon approval : returns a jwt token 
+
+4.2 : Route2 :  Get('/presignedurl') : using aws-s3-bucket @aws-sdk/client-s3 and @aws-sdk/s3-request-presigner
+                using authmiddleware : for verifying the user : when generating a new presignedurl 
+
+
+
+Notes:
+1. All the payout request is sent to RPC servers , (in form of http req) , to Sol or Eth blockchain for rolling out payment from parent wallet
+2. 
+
+
