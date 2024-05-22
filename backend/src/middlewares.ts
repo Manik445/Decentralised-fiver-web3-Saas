@@ -6,11 +6,11 @@ export function authMiddleware(req : Request , res : Response , next : NextFunct
     const authheader = req.header("authorization") ?? ""
 
     try {
-        const decode = jwt.verify(authheader , SECRET_KEY);
+        const decode = jwt.verify(authheader , SECRET_KEY); 
         // @ts-ignore 
-        if(decode.userId){
+        if(decode.userId){    
             // @ts-ignore
-            req.userId = decode.userId
+            req.userId = decode.userId // 
             return next()
         }
         else{

@@ -14,6 +14,70 @@ import createTaksUrl from "./types";
 const DEFAULT_TITLE = "select the most clickable images"
 
 
+router.get('/test' , authMiddleware , async(req , res)=>{
+    // @ts-ignore
+    const taskId : string = req.query.taskId 
+    // @ts-ignore 
+    const userId : string = req.query.userId 
+
+    const taskDetails = await prismaClient.user.findFirst({
+        where: {
+            // @ts-ignore
+            user_id : Number(userId) , 
+            id : Number(taskId)
+        }
+    })
+
+    // returning res 
+    const response = await prismaClient.user.findMany({
+        where : {
+            // @ts-ignore
+            task_id : Number(taskId)
+        }, 
+        Includes : {
+            task : true , 
+            option : true 
+        }
+    })
+
+    const result: Record<string, {
+        count: number;
+        option: {
+            imageUrl: string
+        }
+    }> = {};
+        // @ts-ignore
+    taskDetails.options.forEach(option => {
+        result[option.id] = {
+            count: 0,
+            option: {
+                imageUrl: option.image_url
+            }
+        }
+    })
+
+    response.forEach(r => {
+        // @ts-ignore
+        result[r.option_id].count++;
+    });
+
+    res.json({
+        result,
+        taskDetails
+    })
+
+    if(!taskDetails){
+        return res.status(411).json({
+            message : "No task Details found "
+        })
+    }
+
+
+
+
+
+})
+
 router.get('/test' , (req , res)=>{
     res.send("this is test file")
 })
@@ -23,7 +87,7 @@ const S3client = new S3Client({
 
     credentials : {
         accessKeyId : "FANGLALAJAAW" , 
-        secretAcessKey : "GALGLANGALNGALL"
+        secretAcessKey : "GALGLANGALNGALL" 
     },   
     region : "us-ease-1"  
 });
@@ -50,7 +114,7 @@ router.post('/task' , authMiddleware , async(req , res)=>{
         res.status(411).json({
             message : "invalid inputs given by user"
         })
-    }
+    }    
 
     // parse the signature to ensure that person paid $x
     // @ts-ignore
@@ -82,13 +146,6 @@ router.post('/task' , authMiddleware , async(req , res)=>{
     res.json({
         id : response.id 
     })
-
-    // create new task : inputs validated
-    // prismaClient.task.create({
-    //     data : {
-    //         title : parseData.data?.title ?? DEFAULT_TITLE
-    //     }
-    // })
 })
 
 // provide jwt token in header : while generting presignedurl 

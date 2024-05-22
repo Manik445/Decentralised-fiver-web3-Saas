@@ -80,6 +80,10 @@ For WEb2:
 4.2 : Route2 :  Get('/presignedurl') : using aws-s3-bucket @aws-sdk/client-s3 and @aws-sdk/s3-request-presigner
                 using authmiddleware : for verifying the user : when generating a new presignedurl 
 
+4.3 : Route3 :  Post('/task') : 
+                using zod for input validations 
+
+
 
 
 Notes:
